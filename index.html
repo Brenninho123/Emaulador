@@ -18,12 +18,12 @@ canvas {
   margin-top: 10px;
 }
 
-input, button {
+input {
   background: #00ff88;
   color: #000;
   border: none;
   padding: 8px;
-  margin: 5px;
+  margin: 6px;
   font-weight: bold;
   cursor: pointer;
 }
@@ -32,10 +32,10 @@ input, button {
 <body>
 
 <h1>🕹️ EMAULADOR</h1>
-<p>Emulador CHIP-8 em HTML + JavaScript</p>
+<p>Emulador CHIP-8 (BIN / CH8)</p>
 
-<input type="file" id="romLoader">
-<br>
+<input type="file" id="romLoader" accept=".bin,.ch8">
+<p id="romName">Nenhuma ROM carregada</p>
 
 <canvas id="screen"></canvas>
 
@@ -47,19 +47,21 @@ A S D F<br>
 Z X C V
 </p>
 
-<!-- SCRIPT DO EMULADOR -->
+<!-- CORE DO EMULADOR -->
 <script src="script.js"></script>
 
-<!-- LOADER DA ROM -->
+<!-- LOADER -->
 <script>
+const romName = document.getElementById("romName");
+
 document.getElementById("romLoader").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
 
+  romName.textContent = "ROM carregada: " + file.name;
+
   const reader = new FileReader();
-  reader.onload = () => {
-    loadROM(reader.result);
-  };
+  reader.onload = () => loadROM(reader.result);
   reader.readAsArrayBuffer(file);
 });
 </script>
