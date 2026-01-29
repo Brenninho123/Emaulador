@@ -10,6 +10,7 @@ body {
   color: #00ff88;
   font-family: monospace;
   text-align: center;
+  margin: 0;
 }
 
 canvas {
@@ -25,32 +26,62 @@ input {
   padding: 8px;
   margin: 6px;
   font-weight: bold;
-  cursor: pointer;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(4, 60px);
+  gap: 8px;
+  justify-content: center;
+  margin: 15px 0;
+}
+
+.btn {
+  background: #003322;
+  color: #00ff88;
+  border: 2px solid #00ff88;
+  padding: 15px 0;
+  font-size: 18px;
+  user-select: none;
+  touch-action: none;
 }
 </style>
 </head>
 <body>
 
 <h1>🕹️ EMAULADOR</h1>
-<p>Emulador CHIP-8 (BIN / CH8)</p>
+<p>CHIP-8 • BIN / CH8 • Touch</p>
 
 <input type="file" id="romLoader" accept=".bin,.ch8">
 <p id="romName">Nenhuma ROM carregada</p>
 
 <canvas id="screen"></canvas>
 
-<p>
-Teclado CHIP-8:<br>
-1 2 3 4<br>
-Q W E R<br>
-A S D F<br>
-Z X C V
-</p>
+<!-- CONTROLES NA TELA -->
+<div class="controls">
+  <div class="btn" data-key="1">1</div>
+  <div class="btn" data-key="2">2</div>
+  <div class="btn" data-key="3">3</div>
+  <div class="btn" data-key="C">C</div>
 
-<!-- CORE DO EMULADOR -->
+  <div class="btn" data-key="4">4</div>
+  <div class="btn" data-key="5">5</div>
+  <div class="btn" data-key="6">6</div>
+  <div class="btn" data-key="D">D</div>
+
+  <div class="btn" data-key="7">7</div>
+  <div class="btn" data-key="8">8</div>
+  <div class="btn" data-key="9">9</div>
+  <div class="btn" data-key="E">E</div>
+
+  <div class="btn" data-key="A">A</div>
+  <div class="btn" data-key="0">0</div>
+  <div class="btn" data-key="B">B</div>
+  <div class="btn" data-key="F">F</div>
+</div>
+
 <script src="script.js"></script>
 
-<!-- LOADER -->
 <script>
 const romName = document.getElementById("romName");
 
@@ -58,11 +89,19 @@ document.getElementById("romLoader").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
 
-  romName.textContent = "ROM carregada: " + file.name;
+  romName.textContent = "ROM: " + file.name;
 
   const reader = new FileReader();
   reader.onload = () => loadROM(reader.result);
   reader.readAsArrayBuffer(file);
+});
+
+/* CONTROLES TOUCH */
+document.querySelectorAll(".btn").forEach(btn => {
+  const key = parseInt(btn.dataset.key, 16);
+
+  btn.addEventListener("touchstart", () => keys[key] = 1);
+  btn.addEventListener("touchend", () => keys[key] = 0);
 });
 </script>
 
