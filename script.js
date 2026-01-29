@@ -1,5 +1,5 @@
 /* =========================
-   EMAULADOR - CHIP-8 CORE
+   EMAULADOR - CHIP-8
 ========================= */
 
 const WIDTH = 64;
@@ -11,12 +11,13 @@ const SCALE = 10;
 ========================= */
 const canvas = document.getElementById("screen");
 const ctx = canvas.getContext("2d");
+
 canvas.width = WIDTH * SCALE;
 canvas.height = HEIGHT * SCALE;
 ctx.scale(SCALE, SCALE);
 
 /* =========================
-   ESTADO DO EMULADOR
+   ESTADO DO CHIP-8
 ========================= */
 let memory = new Uint8Array(4096);
 let V = new Uint8Array(16);
@@ -30,7 +31,7 @@ let soundTimer = 0;
 let keys = new Uint8Array(16);
 
 /* =========================
-   FONTSET CHIP-8
+   FONTSET
 ========================= */
 const fontset = [
 0xF0,0x90,0x90,0x90,0xF0,
@@ -69,6 +70,7 @@ function reset() {
 ========================= */
 function draw() {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
   for (let i = 0; i < gfx.length; i++) {
     if (gfx[i]) {
       ctx.fillRect(i % WIDTH, (i / WIDTH) | 0, 1, 1);
@@ -111,12 +113,13 @@ function cycle() {
       I = opcode & 0x0FFF;
       break;
 
-    case 0xD000:
+    case 0xD000: {
       let height = opcode & 0x000F;
       V[0xF] = 0;
 
       for (let row = 0; row < height; row++) {
         let sprite = memory[I + row];
+
         for (let col = 0; col < 8; col++) {
           if (sprite & (0x80 >> col)) {
             let px = (V[x] + col) % WIDTH;
@@ -130,6 +133,7 @@ function cycle() {
       }
       draw();
       break;
+    }
   }
 
   if (delayTimer > 0) delayTimer--;
@@ -142,14 +146,23 @@ function cycle() {
 setInterval(cycle, 1000 / 60);
 
 /* =========================
-   LOADER DE ROM
+   LOAD ROM (BIN / CH8)
 ========================= */
 function loadROM(arrayBuffer) {
   reset();
-  let rom = new Uint8Array(arrayBuffer);
+
+  const rom = new Uint8Array(arrayBuffer);
+
+  if (rom.length > 3584) {
+    alert("ROM grande demais para CHIP-8!");
+    return;
+  }
+
   for (let i = 0; i < rom.length; i++) {
     memory[0x200 + i] = rom[i];
   }
+
+  console.log("ROM carregada:", rom.length, "bytes");
 }
 
 /* =========================
