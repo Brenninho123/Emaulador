@@ -1,14 +1,8 @@
-/* =========================
-   EMAULADOR - CHIP-8
-========================= */
-
 const WIDTH = 64;
 const HEIGHT = 32;
 const SCALE = 10;
 
-/* =========================
-   CANVAS
-========================= */
+/* CANVAS */
 const canvas = document.getElementById("screen");
 const ctx = canvas.getContext("2d");
 
@@ -16,23 +10,17 @@ canvas.width = WIDTH * SCALE;
 canvas.height = HEIGHT * SCALE;
 ctx.scale(SCALE, SCALE);
 
-/* =========================
-   ESTADO DO CHIP-8
-========================= */
+/* CHIP-8 STATE */
 let memory = new Uint8Array(4096);
 let V = new Uint8Array(16);
-let I = 0;
-let pc = 0x200;
-
 let gfx = new Uint8Array(WIDTH * HEIGHT);
-let delayTimer = 0;
-let soundTimer = 0;
-
 let keys = new Uint8Array(16);
 
-/* =========================
-   FONTSET
-========================= */
+let I = 0;
+let pc = 0x200;
+let delayTimer = 0;
+
+/* FONTSET */
 const fontset = [
 0xF0,0x90,0x90,0x90,0xF0,
 0x20,0x60,0x20,0x20,0x70,
@@ -46,41 +34,31 @@ const fontset = [
 0xF0,0x90,0xF0,0x10,0xF0
 ];
 
-/* =========================
-   RESET
-========================= */
+/* RESET */
 function reset() {
   memory.fill(0);
   V.fill(0);
   gfx.fill(0);
   keys.fill(0);
-
   pc = 0x200;
   I = 0;
 
-  for (let i = 0; i < fontset.length; i++) {
+  for (let i = 0; i < fontset.length; i++)
     memory[i] = fontset[i];
-  }
 
   draw();
 }
 
-/* =========================
-   DESENHO
-========================= */
+/* DRAW */
 function draw() {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
   for (let i = 0; i < gfx.length; i++) {
-    if (gfx[i]) {
+    if (gfx[i])
       ctx.fillRect(i % WIDTH, (i / WIDTH) | 0, 1, 1);
-    }
   }
 }
 
-/* =========================
-   CICLO DA CPU
-========================= */
+/* CPU */
 function cycle() {
   let opcode = (memory[pc] << 8) | memory[pc + 1];
   pc += 2;
@@ -102,72 +80,56 @@ function cycle() {
       break;
 
     case 0x6000:
-      V[x] = opcode & 0x00FF;
+      V[x] = opcode & 0xFF;
       break;
 
     case 0x7000:
-      V[x] = (V[x] + (opcode & 0x00FF)) & 0xFF;
+      V[x] = (V[x] + (opcode & 0xFF)) & 0xFF;
       break;
 
     case 0xA000:
       I = opcode & 0x0FFF;
       break;
 
-    case 0xD000: {
-      let height = opcode & 0x000F;
+    case 0xD000:
+      let h = opcode & 0x000F;
       V[0xF] = 0;
 
-      for (let row = 0; row < height; row++) {
-        let sprite = memory[I + row];
+      for (let r = 0; r < h; r++) {
+        let sprite = memory[I + r];
+        for (let c = 0; c < 8; c++) {
+          if (sprite & (0x80 >> c)) {
+            let px = (V[x] + c) % WIDTH;
+            let py = (V[y] + r) % HEIGHT;
+            let idx = px + py * WIDTH;
 
-        for (let col = 0; col < 8; col++) {
-          if (sprite & (0x80 >> col)) {
-            let px = (V[x] + col) % WIDTH;
-            let py = (V[y] + row) % HEIGHT;
-            let index = px + py * WIDTH;
-
-            if (gfx[index] === 1) V[0xF] = 1;
-            gfx[index] ^= 1;
+            if (gfx[idx]) V[0xF] = 1;
+            gfx[idx] ^= 1;
           }
         }
       }
       draw();
       break;
-    }
   }
 
   if (delayTimer > 0) delayTimer--;
-  if (soundTimer > 0) soundTimer--;
 }
 
-/* =========================
-   LOOP
-========================= */
 setInterval(cycle, 1000 / 60);
 
-/* =========================
-   LOAD ROM (BIN / CH8)
-========================= */
-function loadROM(arrayBuffer) {
+/* LOAD ROM */
+function loadROM(buffer) {
   reset();
-
-  const rom = new Uint8Array(arrayBuffer);
-
+  const rom = new Uint8Array(buffer);
   if (rom.length > 3584) {
-    alert("ROM grande demais para CHIP-8!");
+    alert("ROM grande demais");
     return;
   }
-
-  for (let i = 0; i < rom.length; i++) {
+  for (let i = 0; i < rom.length; i++)
     memory[0x200 + i] = rom[i];
-  }
-
-  console.log("ROM carregada:", rom.length, "bytes");
 }
 
-/* =========================
-   TECLADO CHIP-8
-========================= */
+/* TECLADO FÍSICO */
 const keyMap = {
   "1":0x1,"2":0x2,"3":0x3,"4":0xC,
   "q":0x4,"w":0x5,"e":0x6,"r":0xD,
